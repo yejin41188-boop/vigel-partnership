@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>바이겔크림 파트너십</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1e2e4f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="바이겔">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg-base: #f1f4f8;
+    --primary-dark: #1e2e4f;
+    --accent: #c8a45a;
+    --accent-light: #e8c97a;
+    --white: #ffffff;
+    --text-main: #1a2533;
+    --text-sub: #64748b;
+    --transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    line-height: 1.6;
+    word-break: keep-all;
+    overflow-x: hidden;
+  }
+
+  header.hero {
+    padding: 55px 24px 45px;
+    text-align: center;
+    background-color: var(--primary-dark);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  }
+
+  .brand-tag {
+    font-size: 9pt;
+    color: var(--accent-light);
+    letter-spacing: 4px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: block;
+    text-transform: uppercase;
+  }
+
+  header h1 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 1.7rem;
+    color: var(--white);
+    margin: 0 0 8px 0;
+    letter-spacing: -1px;
+    line-height: 1.3;
+  }
+
+  header .subtitle {
+    color: rgba(255,255,255,0.7);
+    font-size: 10pt;
+    font-weight: 300;
+  }
+
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 24px 20px 80px;
+  }
+
+  .program-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .program-card {
+    background-color: var(--white);
+    border-radius: 16px;
+    padding: 22px;
+    border: 1px solid rgba(0,0,0,0.06);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    will-change: transform, background-color;
+    /* 카드 자체 전환도 0.6s로 통일 */
+    transition:
+      background-color 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      transform       0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      box-shadow      0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      border-color    0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .card-header { display: flex; align-items: center; gap: 15px; }
+
+  .card-icon {
+    font-size: 1.5rem; width: 44px; height: 44px; background: #f8fafc;
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                color    0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .card-title-area h3 { font-size: 1.05rem; color: var(--primary-dark); font-weight: 700; transition: color 0.6s ease; }
+  .card-title-area p  { font-size: 0.8rem; color: var(--text-sub); transition: color 0.6s ease; }
+
+  .program-card.active {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(10,22,41,0.15);
+    border-color: var(--accent);
+  }
+
+  .program-card.active .card-icon { background: var(--accent); color: var(--white); }
+  .program-card.active .card-title-area h3 { color: var(--accent-light); }
+  .program-card.active .card-title-area p  { color: rgba(255,255,255,0.5); }
+
+  /* ── 펼침 영역: grid-rows 트릭으로 진짜 자연스러운 height 애니메이션 ── */
+  .active-content {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+      grid-template-rows 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      opacity            0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      margin-top         0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    overflow: hidden;
+  }
+
+  .active-content-inner {
+    overflow: hidden;
+  }
+
+  .program-card.active .active-content {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    margin-top: 20px;
+  }
+
+  /* 구분선: pseudo로 처리 → opacity와 함께 서서히 등장 */
+  .program-card.active .detail-list::before {
+    content: '';
+    display: block;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 16px;
+  }
+
+  .detail-list { list-style: none; }
+  .detail-list li {
+    font-size: 0.95rem; color: #cbd5e1; margin-bottom: 10px; padding-left: 18px;
+    position: relative; line-height: 1.6;
+  }
+  .detail-list li::before { content: "•"; color: var(--accent); position: absolute; left: 0; }
+  .detail-list li strong { color: #ffffff; font-weight: 500; }
+
+  .toggle-indicator {
+    margin-left: auto; font-size: 0.7rem; color: #cbd5e1;
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                color    0.6s ease;
+  }
+  .program-card.active .toggle-indicator { transform: rotate(180deg); color: var(--white); }
+
+  footer {
+    padding: 60px 20px; text-align: center; background: var(--bg-base);
+    border-top: 1px solid rgba(0,0,0,0.05);
+  }
+  .footer-text { font-size: 8pt; color: #94a3b8; line-height: 1.6; margin-bottom: 12px; }
+  .watermark { font-size: 7.5pt; color: #b0b8c4; letter-spacing: 2px; font-style: italic; opacity: 0.8; margin-top: 8px; }
+  .brand-group { margin-top: 25px; }
+  .brand-name-kr { font-weight: 500; color: var(--primary-dark); font-size: 9pt; margin-bottom: 2px; }
+
+  /* ===== 직원탭 스타일 ===== */
+  .hidden-trigger {
+    display: inline-block;
+    cursor: pointer;
+    background: rgba(30,46,79,0.07);
+    border: 1px solid rgba(30,46,79,0.15);
+    border-radius: 5px;
+    margin-left: 8px;
+    vertical-align: middle;
+    position: relative; top: -1px;
+    padding: 2px 7px;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: rgba(30,46,79,0.30);
+  }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(10,18,35,0.65); z-index: 2000;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+
+  .pw-modal {
+    background: var(--primary-dark); border-radius: 20px; padding: 36px 28px;
+    width: 300px; text-align: center;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+    border: 1px solid rgba(200,164,90,0.25);
+  }
+  .pw-modal h3 {
+    font-size: 15px; font-weight: 700; color: var(--accent-light);
+    margin-bottom: 6px; letter-spacing: 1px;
+  }
+  .pw-modal p { font-size: 11.5px; color: rgba(255,255,255,0.5); margin-bottom: 22px; }
+  .pw-modal input {
+    width: 100%; background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(200,164,90,0.3); border-radius: 10px;
+    padding: 14px; font-size: 24px; text-align: center;
+    letter-spacing: 12px; font-family: monospace; outline: none; color: #fff;
+    transition: border-color 0.2s;
+  }
+  .pw-modal input::placeholder { color: rgba(255,255,255,0.2); letter-spacing: 4px; font-size: 16px; }
+  .pw-modal input:focus { border-color: var(--accent); }
+  .pw-modal input.error { border-color: #f87171; animation: shake 0.3s; }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)}
+  }
+  .pw-btns { display: flex; gap: 8px; margin-top: 18px; }
+  .pw-btns button {
+    flex: 1; padding: 13px; border-radius: 10px; border: none;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif; transition: opacity 0.2s;
+  }
+  .pw-btns button:hover { opacity: 0.82; }
+  .btn-pw-ok     { background: var(--accent); color: var(--primary-dark); }
+  .btn-pw-cancel { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
+
+  /* 직원 페이지 */
+  #staff-page { display: none; min-height: 100vh; background: var(--bg-base); }
+  #staff-page.active { display: block; }
+
+  .staff-header {
+    padding: 48px 24px 28px;
+    background: var(--primary-dark);
+    color: #fff; display: flex; align-items: center; gap: 16px;
+    position: sticky; top: 0; z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+    border-bottom: 1px solid rgba(200,164,90,0.2);
+  }
+  .s-back {
+    background: rgba(200,164,90,0.15); border: 1px solid rgba(200,164,90,0.25);
+    color: var(--accent-light); width: 38px; height: 38px; border-radius: 50%;
+    font-size: 15px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: background 0.2s;
+  }
+  .s-back:hover { background: rgba(200,164,90,0.28); }
+  .staff-header-info h2 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 18px; font-weight: 700; color: #fff;
+  }
+  .staff-header-info p { font-size: 10.5px; color: rgba(255,255,255,0.45); margin-top: 3px; letter-spacing: 0.3px; }
+
+  .staff-body { max-width: 600px; margin: 0 auto; padding: 22px 18px 110px; }
+
+  /* 툴바 */
+  .s-toolbar { display: flex; gap: 8px; margin-bottom: 14px; }
+  .s-input {
+    flex: 1; background: #fff;
+    border: 1.5px solid #dde3ef; border-radius: 12px;
+    padding: 13px 16px; font-size: 13px; outline: none;
+    font-family: 'Noto Sans KR', sans-serif;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: border-color 0.2s;
+  }
+  .s-input:focus { border-color: var(--primary-dark); }
+  .s-btn-add {
+    background: var(--primary-dark); color: var(--accent-light);
+    border: none; border-radius: 12px; padding: 13px 20px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif; white-space: nowrap;
+    box-shadow: 0 3px 12px rgba(30,46,79,0.2);
+    transition: opacity 0.2s;
+  }
+  .s-btn-add:hover { opacity: 0.85; }
+
+  .s-select-bar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 12px; padding: 0 4px;
+  }
+  .s-select-bar label {
+    font-size: 12px; color: var(--text-sub);
+    display: flex; align-items: center; gap: 7px; cursor: pointer; font-weight: 500;
+  }
+  .s-select-bar input[type="checkbox"] { width:15px; height:15px; accent-color: var(--primary-dark); cursor:pointer; }
+  .s-sel-count {
+    font-size: 11.5px; color: var(--accent); font-weight: 700;
+    margin-left: auto; letter-spacing: 0.3px;
+  }
+
+  .s-hospital-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .s-h-item {
+    background: #fff; border: 1px solid #e4e9f2; border-radius: 16px;
+    padding: 16px 18px; display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    transition: box-shadow 0.25s, transform 0.2s;
+  }
+  .s-h-item:hover { box-shadow: 0 6px 20px rgba(30,46,79,0.10); transform: translateY(-1px); }
+  .s-h-item input[type="checkbox"] { width:17px; height:17px; accent-color: var(--primary-dark); cursor:pointer; flex-shrink:0; }
+  .s-h-body { flex:1; cursor:pointer; }
+  .s-h-name { font-size: 14px; font-weight: 700; color: var(--primary-dark); }
+  .s-h-meta { font-size: 11px; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+
+  .s-badge {
+    display: inline-block; padding: 3px 9px; border-radius: 20px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+  }
+  .sb-pending { background: #fef3c7; color: #b45309; }
+  .sb-ongoing { background: #dbeafe; color: #1d4ed8; }
+  .sb-done    { background: #d1fae5; color: #065f46; }
+  .sb-reject  { background: #fee2e2; color: #b91c1c; }
+  .sb-none    { background: #f1f4f8; color: #94a3b8; }
+
+  .s-h-arrow { color: #c8a45a; font-size: 18px; flex-shrink:0; opacity: 0.6; }
+  .s-del-btn {
+    background:none; border:none; color: #d1d5db; font-size: 13px;
+    cursor:pointer; padding: 6px; transition: color 0.2s; flex-shrink:0;
+    border-radius: 6px;
+  }
+  .s-del-btn:hover { color: #ef4444; background: #fee2e2; }
+
+  /* 상세 */
+  .s-section {
+    background: #fff; border-radius: 16px; border: 1px solid #e4e9f2;
+    padding: 22px 20px; margin-bottom: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .s-section h4 {
+    font-size: 10px; font-weight: 700; color: var(--accent);
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 16px; padding-bottom: 10px;
+    border-bottom: 1px solid rgba(200,164,90,0.2);
+  }
+  .s-row { margin-bottom: 14px; }
+  .s-row:last-child { margin-bottom: 0; }
+  .s-row label {
+    display:block; font-size: 11px; font-weight: 700;
+    color: var(--text-sub); margin-bottom: 7px; letter-spacing: 0.3px;
+  }
+  .s-field {
+    width: 100%; background: #f8fafc;
+    border: 1.5px solid #e4e9f2; border-radius: 10px;
+    padding: 11px 14px; font-size: 13px; outline: none;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: border-color 0.2s, background 0.2s;
+    color: var(--text-main);
+  }
+  .s-field:focus { border-color: var(--primary-dark); background: #fff; }
+  .s-field[readonly] { color: #94a3b8; cursor: default; }
+  select.s-field { cursor:pointer; }
+  textarea.s-field { resize:vertical; min-height:88px; line-height:1.7; }
+
+  .prog-grid { display:flex; flex-direction:column; gap:7px; }
+  .prog-item {
+    display:flex; align-items:center; gap:12px;
+    padding: 12px 14px; background: #f8fafc;
+    border-radius: 12px; cursor:pointer;
+    transition: background 0.2s, border-color 0.2s;
+    border: 1.5px solid transparent;
+  }
+  .prog-item:hover { background: #f0f4ff; }
+  .prog-item.checked { background: #f0f4ff; border-color: rgba(30,46,79,0.2); }
+  .prog-item input[type="checkbox"] { width:16px; height:16px; accent-color:var(--primary-dark); cursor:pointer; flex-shrink:0; }
+  .prog-item-t { flex:1; }
+  .prog-item-t strong { font-size: 12.5px; font-weight: 700; color: var(--primary-dark); display:block; }
+  .prog-item-t span   { font-size: 10.5px; color: var(--text-sub); margin-top: 1px; display:block; }
+
+  .s-save-btn {
+    width: 100%; background: var(--primary-dark); color: var(--accent-light);
+    border: none; border-radius: 14px; padding: 16px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    box-shadow: 0 4px 16px rgba(30,46,79,0.25);
+    letter-spacing: 0.5px;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .s-save-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  /* 하단 바 */
+  .s-bottom {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 600px;
+    background: rgba(241,244,248,0.96);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid #e4e9f2;
+    padding: 14px 18px 20px; z-index: 50;
+  }
+  .s-excel-btn {
+    width: 100%; background: #15803d; color: #fff; border: none;
+    border-radius: 14px; padding: 15px; font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    box-shadow: 0 4px 14px rgba(21,128,61,0.25);
+    letter-spacing: 0.3px;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .s-excel-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .s-excel-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .s-empty {
+    text-align:center; padding: 56px 20px; color: var(--text-sub);
+  }
+  .s-empty .ei { font-size: 44px; margin-bottom: 14px; opacity: 0.5; }
+  .s-empty p { font-size: 13px; line-height: 1.9; }
+
+  .s-toast {
+    position:fixed; bottom: 90px; left:50%; transform:translateX(-50%);
+    background: var(--primary-dark); color: var(--accent-light);
+    padding: 11px 24px; border-radius: 24px;
+    font-size: 12.5px; font-weight: 600; z-index:3000;
+    opacity:0; transition:opacity 0.3s;
+    pointer-events:none; white-space:nowrap;
+    border: 1px solid rgba(200,164,90,0.3);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+  .s-toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<header class="hero" id="mainHeader">
+  <span class="brand-tag">Chodang Pharmaceutical</span>
+  <h1>바이겔크림 처방 파트너십</h1>
+  <p class="subtitle">원장님의 학술 및 진료 환경 지원을 위해 준비했습니다.</p>
+</header>
+
+<main class="container">
+  <div class="program-list">
+
+    <div class="program-card" onclick="toggleCard(this)">
+      <div class="card-header">
+        <div class="card-icon">🎓</div>
+        <div class="card-title-area">
+          <h3>온라인 강연</h3>
+          <p>DTM · Doctor To MR</p>
+        </div>
+        <div class="toggle-indicator">▼</div>
+      </div>
+      <div class="active-content">
+        <div class="active-content-inner">
+          <ul class="detail-list">
+            <li>당사 영업사원 대상 바이겔크림 온라인 강의 진행</li>
+            <li><strong>소정의 강의료(자문료) 지급</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="program-card" onclick="toggleCard(this)">
+      <div class="card-header">
+        <div class="card-icon">🏛️</div>
+        <div class="card-title-area">
+          <h3>Vigel Symposium</h3>
+          <p>학술 심포지엄 우선 초청</p>
+        </div>
+        <div class="toggle-indicator">▼</div>
+      </div>
+      <div class="active-content">
+        <div class="active-content-inner">
+          <ul class="detail-list">
+            <li>국내외 저명 연자 강연 및 최신 임상 정보 공유</li>
+            <li>연 1회, 초당약품 주관 심포지엄 <strong>우선 초청</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="program-card" onclick="toggleCard(this)">
+      <div class="card-header">
+        <div class="card-icon">🏥</div>
+        <div class="card-title-area">
+          <h3>의국/과 컨퍼런스 지원</h3>
+          <p>원내 행사 맞춤 지원</p>
+        </div>
+        <div class="toggle-indicator">▼</div>
+      </div>
+      <div class="active-content">
+        <div class="active-content-inner">
+          <ul class="detail-list">
+            <li>원내 행사 및 컨퍼런스 일정에 맞춘 <strong>맞춤 지원</strong></li>
+            <li>매월 정기 식음료 서비스 지원</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="program-card" onclick="toggleCard(this)">
+      <div class="card-header">
+        <div class="card-icon">👥</div>
+        <div class="card-title-area">
+          <h3>온/오프라인 세미나</h3>
+          <p>DTD · Doctor To Doctor</p>
+        </div>
+        <div class="toggle-indicator">▼</div>
+      </div>
+      <div class="active-content">
+        <div class="active-content-inner">
+          <ul class="detail-list">
+            <li>교수님 및 원장님 소모임(스터디, 세미나) 지원</li>
+            <li>일정에 따른 <strong>식사 및 장소 지원</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="program-card" onclick="toggleCard(this)">
+      <div class="card-header">
+        <div class="card-icon">🍽️</div>
+        <div class="card-title-area">
+          <h3>1:1 식사 미팅</h3>
+          <p>월간 정기 학술 미팅</p>
+        </div>
+        <div class="toggle-indicator">▼</div>
+      </div>
+      <div class="active-content">
+        <div class="active-content-inner">
+          <ul class="detail-list">
+            <li>담당자와의 1:1 미팅을 통한 최신 학술 정보 공유</li>
+            <li>원장님 일정에 맞춘 <strong>월간 정기 미팅</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="program-card" onclick="toggleCard(this)">
+      <div class="card-header">
+        <div class="card-icon">🎬</div>
+        <div class="card-title-area">
+          <h3>동영상 자문 서비스</h3>
+          <p>제품 강연 시청 지원</p>
+        </div>
+        <div class="toggle-indicator">▼</div>
+      </div>
+      <div class="active-content">
+        <div class="active-content-inner">
+          <ul class="detail-list">
+            <li>제품 강연 시청 및 자문 피드백 진행</li>
+            <li>시청 시 <strong>프리미엄 식사</strong> 제공</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="program-card" onclick="toggleCard(this)">
+      <div class="card-header">
+        <div class="card-icon">📋</div>
+        <div class="card-title-area">
+          <h3>제품 설명회</h3>
+          <p>SELF · 자율적 식사 미팅</p>
+        </div>
+        <div class="toggle-indicator">▼</div>
+      </div>
+      <div class="active-content">
+        <div class="active-content-inner">
+          <ul class="detail-list">
+            <li>원장님 일정에 맞춘 <strong>자율적 제품 설명회</strong></li>
+            <li>유연한 식사 미팅 지원</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="program-card" onclick="toggleCard(this)">
+      <div class="card-header">
+        <div class="card-icon">🛍️</div>
+        <div class="card-title-area">
+          <h3>초당몰 운용</h3>
+          <p>Chodang Mall 전용 계정</p>
+        </div>
+        <div class="toggle-indicator">▼</div>
+      </div>
+      <div class="active-content">
+        <div class="active-content-inner">
+          <ul class="detail-list">
+            <li><strong>www.chodangmall.com</strong> 전용 계정 운영</li>
+            <li>식음료, 건강식품, 사무/생활용품 등 다양한 카테고리</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="program-card" onclick="toggleCard(this)">
+      <div class="card-header">
+        <div class="card-icon">📌</div>
+        <div class="card-title-area">
+          <h3>기타</h3>
+          <p>Additional Support</p>
+        </div>
+        <div class="toggle-indicator">▼</div>
+      </div>
+      <div class="active-content">
+        <div class="active-content-inner">
+          <ul class="detail-list">
+            <li>원장님 니즈에 맞춘 <strong>맞춤형 지원</strong> 제공</li>
+            <li>담당자와 협의 후 진행</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="footer-text">본 문서는 파트너 원장님 전용 안내 자료입니다.<br>무단 배포 및 복제를 금합니다.</div>
+  <div class="watermark">Designed by elim</div>
+  <div class="brand-group">
+    <p class="brand-name-kr">초당약품공업(주)</p>
+    <p class="brand-name-en">CHODANG PHARMACEUTICAL CO., LTD.<span class="hidden-trigger" id="hiddenTrigger">STAFF</span></p>
+  </div>
+</footer>
+
+<!-- 비밀번호 모달 -->
+<div class="modal-overlay" id="pwModal">
+  <div class="pw-modal">
+    <h3>🔐 직원 전용</h3>
+    <p>비밀번호를 입력하세요</p>
+    <input type="password" id="pwInput" maxlength="4" placeholder="••••" autocomplete="off">
+    <div class="pw-btns">
+      <button class="btn-pw-cancel" onclick="closePwModal()">취소</button>
+      <button class="btn-pw-ok"     onclick="checkPw()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 직원 페이지 -->
+<div id="staff-page">
+  <div class="staff-header">
+    <button class="s-back" id="sBackBtn">←</button>
+    <div class="staff-header-info">
+      <h2 id="sHeaderTitle">병원 관리</h2>
+      <p  id="sHeaderSub">바이겔크림 파트너십 진행 현황</p>
+    </div>
+  </div>
+
+  <!-- 목록 뷰 -->
+  <div id="sListView" class="staff-body">
+    <div class="s-toolbar">
+      <input class="s-input" type="text" id="sHospInput" placeholder="병원명 입력" maxlength="30">
+      <button class="s-btn-add" onclick="addHosp()">+ 추가</button>
+    </div>
+    <div class="s-select-bar">
+      <label><input type="checkbox" id="sSelectAll" onchange="toggleAll(this)"> 전체 선택</label>
+      <span class="s-sel-count" id="sSelCount"></span>
+    </div>
+    <div class="s-hospital-list" id="sHospList"></div>
+    <div id="sEmpty" class="s-empty" style="display:none">
+      <div class="ei">🏥</div>
+      <p>등록된 병원이 없어요.<br>위에서 병원명을 추가해보세요.</p>
+    </div>
+  </div>
+
+  <!-- 상세 뷰 -->
+  <div id="sDetailView" class="staff-body" style="display:none">
+    <div class="s-section">
+      <h4>기본 정보</h4>
+      <div class="s-row">
+        <label>병원명</label>
+        <input class="s-field" type="text" id="dHospName" readonly style="background:#f8fafc;color:#999;">
+      </div>
+      <div class="s-row">
+        <label>담당 의사명</label>
+        <input class="s-field" type="text" id="dDoctor" placeholder="의사명 입력">
+      </div>
+      <div class="s-row">
+        <label>진행 상태</label>
+        <select class="s-field" id="dStatus">
+          <option value="">선택하세요</option>
+          <option value="미답변">미답변</option>
+          <option value="수락">수락</option>
+          <option value="거절">거절</option>
+          <option value="보류">보류</option>
+        </select>
+      </div>
+    </div>
+    <div class="s-section">
+      <h4>파트너십 프로그램</h4>
+      <div class="prog-grid" id="sProgGrid"></div>
+    </div>
+    <div class="s-section">
+      <h4>메모 및 기타</h4>
+      <div class="s-row">
+        <label>메모</label>
+        <textarea class="s-field" id="dMemo" placeholder="특이사항, 원장님 성향, 다음 방문 계획 등"></textarea>
+      </div>
+      <div class="s-row">
+        <label>기타</label>
+        <textarea class="s-field" id="dEtc" placeholder="기타 사항 입력"></textarea>
+      </div>
+    </div>
+    <div style="padding:0 0 16px;">
+      <button class="s-save-btn" onclick="saveDetail()">저장하기</button>
+    </div>
+  </div>
+
+  <!-- 하단 엑셀 바 (목록에서만) -->
+  <div class="s-bottom" id="sBottomBar">
+    <button class="s-excel-btn" id="sExcelBtn" onclick="downloadExcel()" disabled>📊 다운로드</button>
+  </div>
+</div>
+
+<div class="s-toast" id="sToast"></div>
+
+<script>
+  // ── 서비스워커 등록 ──
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js');
+  }
+
+  // ── 기존 toggleCard 유지 ──
+  function toggleCard(card) {
+    const isActive = card.classList.contains('active');
+    document.querySelectorAll('.program-card').forEach(c => c.classList.remove('active'));
+    if (!isActive) card.classList.add('active');
+  }
+
+  // ── 프로그램 목록 ──
+  const PROGS = [
+    { key:'online_lecture', title:'온라인 강연',        sub:'DTM · Doctor To MR' },
+    { key:'symposium',      title:'Vigel Symposium',   sub:'학술 심포지엄 우선 초청' },
+    { key:'conference',     title:'의국/과 컨퍼런스 지원', sub:'원내 행사 맞춤 지원' },
+    { key:'seminar',        title:'온/오프라인 세미나',   sub:'DTD · Doctor To Doctor' },
+    { key:'meal_meeting',   title:'1:1 식사 미팅',      sub:'월간 정기 학술 미팅' },
+    { key:'video_consult',  title:'동영상 자문 서비스',   sub:'제품 강연 시청 지원' },
+    { key:'product_demo',   title:'제품 설명회',         sub:'SELF · 자율적 식사 미팅' },
+    { key:'chodangmall',    title:'초당몰 운용',         sub:'Chodang Mall 전용 계정' },
+  ];
+  const STATUS_CLS = { '미답변':'sb-pending','수락':'sb-done','거절':'sb-reject','보류':'sb-ongoing','':'sb-none' };
+
+  let hosps = [];
+  let curIdx = null;
+  let isDetail = false;
+
+  function initStaff() {
+    const s = localStorage.getItem('baigel_hosps');
+    if (s) hosps = JSON.parse(s);
+    buildProgGrid();
+    renderList();
+  }
+
+  function persist() { localStorage.setItem('baigel_hosps', JSON.stringify(hosps)); }
+
+  // ── 비밀번호 ──
+  document.getElementById('hiddenTrigger').addEventListener('click', () => {
+    document.getElementById('pwModal').classList.add('active');
+    setTimeout(() => document.getElementById('pwInput').focus(), 100);
+  });
+  document.getElementById('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') checkPw(); });
+
+  function checkPw() {
+    if (document.getElementById('pwInput').value === '1111') {
+      closePwModal();
+      openStaff();
+    } else {
+      const i = document.getElementById('pwInput');
+      i.classList.add('error'); i.value = '';
+      setTimeout(() => i.classList.remove('error'), 400);
+    }
+  }
+  function closePwModal() {
+    document.getElementById('pwModal').classList.remove('active');
+    document.getElementById('pwInput').value = '';
+  }
+
+  // ── 페이지 전환 ──
+  function openStaff() {
+    document.querySelector('header.hero').style.display = 'none';
+    document.querySelector('main.container').style.display = 'none';
+    document.querySelector('footer').style.display = 'none';
+    document.getElementById('staff-page').classList.add('active');
+    showList();
+  }
+
+  document.getElementById('sBackBtn').addEventListener('click', () => {
+    if (isDetail) { showList(); }
+    else {
+      document.getElementById('staff-page').classList.remove('active');
+      document.querySelector('header.hero').style.display = '';
+      document.querySelector('main.container').style.display = '';
+      document.querySelector('footer').style.display = '';
+    }
+  });
+
+  function showList() {
+    isDetail = false; curIdx = null;
+    document.getElementById('sListView').style.display = 'block';
+    document.getElementById('sDetailView').style.display = 'none';
+    document.getElementById('sBottomBar').style.display = 'block';
+    document.getElementById('sHeaderTitle').textContent = '병원 관리';
+    document.getElementById('sHeaderSub').textContent = '바이겔크림 파트너십 진행 현황';
+    renderList();
+  }
+
+  function showDetail(idx) {
+    isDetail = true; curIdx = idx;
+    const h = hosps[idx];
+    document.getElementById('sListView').style.display = 'none';
+    document.getElementById('sDetailView').style.display = 'block';
+    document.getElementById('sBottomBar').style.display = 'none';
+    document.getElementById('sHeaderTitle').textContent = h.name;
+    document.getElementById('sHeaderSub').textContent = '상세 정보 입력';
+
+    document.getElementById('dHospName').value = h.name;
+    document.getElementById('dDoctor').value   = h.doctor  || '';
+    document.getElementById('dStatus').value   = h.status  || '';
+    document.getElementById('dMemo').value     = h.memo    || '';
+    document.getElementById('dEtc').value      = h.etc     || '';
+
+    PROGS.forEach(p => {
+      const cb = document.getElementById('pcb_'+p.key);
+      if (cb) {
+        cb.checked = (h.programs||[]).includes(p.key);
+        cb.closest('.prog-item').classList.toggle('checked', cb.checked);
+      }
+    });
+  }
+
+  // ── 목록 ──
+  function addHosp() {
+    const inp = document.getElementById('sHospInput');
+    const name = inp.value.trim();
+    if (!name) return;
+    if (hosps.find(h => h.name === name)) { showToast('이미 등록된 병원명이에요'); return; }
+    hosps.push({ name, doctor:'', status:'', programs:[], memo:'', etc:'', selected:false });
+    persist(); inp.value = ''; renderList();
+  }
+  document.getElementById('sHospInput').addEventListener('keydown', e => { if(e.key==='Enter') addHosp(); });
+
+  function renderList() {
+    const list  = document.getElementById('sHospList');
+    const empty = document.getElementById('sEmpty');
+    if (!hosps.length) { list.innerHTML=''; empty.style.display='block'; updateExcelBtn(); return; }
+    empty.style.display = 'none';
+    list.innerHTML = hosps.map((h,i) => {
+      const progNames = (h.programs||[])
+        .map(k => { const p = PROGS.find(x=>x.key===k); return p ? p.title : k; })
+        .join(' · ');
+      return `
+      <div class="s-h-item">
+        <input type="checkbox" ${h.selected?'checked':''} onchange="toggleSel(${i},this)">
+        <div class="s-h-body" onclick="showDetail(${i})">
+          <div class="s-h-name">${h.name}</div>
+          <div class="s-h-meta">
+            <span class="s-badge ${STATUS_CLS[h.status]||'sb-none'}">${h.status||'미설정'}</span>
+            ${progNames ? `<span style="color:#94a3b8;font-size:10px;">${progNames}</span>` : ''}
+          </div>
+        </div>
+        <span class="s-h-arrow">›</span>
+        <button class="s-del-btn" onclick="delHosp(${i}, event)">✕</button>
+      </div>`;
+    }).join('');
+    updateExcelBtn(); updateSelectAll();
+  }
+
+  function toggleSel(idx, el) { hosps[idx].selected = el.checked; persist(); updateExcelBtn(); updateSelectAll(); }
+  function toggleAll(el) { hosps.forEach(h => h.selected = el.checked); persist(); renderList(); }
+  function updateSelectAll() {
+    const all  = hosps.length > 0 && hosps.every(h=>h.selected);
+    const some = hosps.some(h=>h.selected);
+    const cb   = document.getElementById('sSelectAll');
+    cb.checked = all; cb.indeterminate = !all && some;
+    const cnt  = hosps.filter(h=>h.selected).length;
+    document.getElementById('sSelCount').textContent = cnt ? `${cnt}개 선택됨` : '';
+  }
+  function updateExcelBtn() {
+    const cnt = hosps.filter(h=>h.selected).length;
+    const btn = document.getElementById('sExcelBtn');
+    btn.disabled = cnt === 0;
+    btn.innerHTML = cnt ? `📊 다운로드 (${cnt}개)` : `📊 다운로드`;
+  }
+  function delHosp(idx, e) {
+    e.stopPropagation();
+    hosps.splice(idx, 1);
+    persist();
+    renderList();
+  }
+
+  // ── 프로그램 그리드 ──
+  function buildProgGrid() {
+    document.getElementById('sProgGrid').innerHTML = PROGS.map(p=>`
+      <label class="prog-item" id="plabel_${p.key}">
+        <input type="checkbox" id="pcb_${p.key}" onchange="onProgChk('${p.key}',this)">
+        <div class="prog-item-t">
+          <strong>${p.title}</strong>
+          <span>${p.sub}</span>
+        </div>
+      </label>`).join('');
+  }
+  function onProgChk(key, el) { el.closest('.prog-item').classList.toggle('checked', el.checked); }
+
+  // ── 저장 ──
+  function saveDetail() {
+    if (curIdx === null) return;
+    hosps[curIdx].doctor   = document.getElementById('dDoctor').value.trim();
+    hosps[curIdx].status   = document.getElementById('dStatus').value;
+    hosps[curIdx].memo     = document.getElementById('dMemo').value.trim();
+    hosps[curIdx].etc      = document.getElementById('dEtc').value.trim();
+    hosps[curIdx].programs = PROGS.filter(p => {
+      const cb = document.getElementById('pcb_'+p.key); return cb && cb.checked;
+    }).map(p=>p.key);
+    persist();
+    showToast('저장되었습니다 ✓');
+    setTimeout(() => showList(), 600);
+  }
+
+  // ── 엑셀(CSV) 다운로드 ──
+  function downloadExcel() {
+    const sel = hosps.filter(h => h.selected);
+    if (!sel.length) return;
+
+    const headers = ['병원명','담당 의사','진행 상태','파트너십 프로그램','메모','기타'];
+
+    const rows = sel.map(h => [
+      h.name,
+      h.doctor || '',
+      h.status || '',
+      (h.programs||[]).map(k => { const p = PROGS.find(x=>x.key===k); return p ? p.title : k; }).join(' / '),
+      h.memo || '',
+      h.etc  || '',
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(','))
+      .join('\n');
+
+    const BOM = '\uFEFF'; // 한글 깨짐 방지
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const d    = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    a.href = url;
+    a.download = `바이겔_파트너십_${d}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ── 토스트 ──
+  function showToast(msg) {
+    const t = document.getElementById('sToast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2000);
+  }
+
+  initStaff();
+</script>
+</body>
+</html>
