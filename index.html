@@ -912,13 +912,12 @@
     setTimeout(() => showList(), 600);
   }
 
-  // ── 엑셀 다운로드 (Excel XML) ──
+  // ── CSV 다운로드 ──
   function downloadExcel() {
     const sel = hosps.filter(h => h.selected);
     if (!sel.length) return;
 
     const headers = ['병원명','담당 의사','진행 상태','파트너십 프로그램','메모','기타'];
-    const colWidths = [80, 60, 50, 200, 120, 100];
 
     const rows = sel.map(h => [
       h.name,
@@ -929,49 +928,20 @@
       h.etc  || '',
     ]);
 
-    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-
-    const headerRow = `<Row>${headers.map(h =>
-      `<Cell ss:StyleID="header"><Data ss:Type="String">${esc(h)}</Data></Cell>`
-    ).join('')}</Row>`;
-
-    const dataRows = rows.map(row =>
-      `<Row>${row.map(cell =>
-        `<Cell><Data ss:Type="String">${esc(cell)}</Data></Cell>`
-      ).join('')}</Row>`
-    ).join('');
-
-    const colDefs = colWidths.map(w =>
-      `<Column ss:Width="${w}"/>`
-    ).join('');
-
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-<Styles>
-  <Style ss:ID="header">
-    <Font ss:Bold="1" ss:Color="#FFFFFF"/>
-    <Interior ss:Color="#1e2e4f" ss:Pattern="Solid"/>
-    <Alignment ss:Horizontal="Center"/>
-  </Style>
-</Styles>
-<Worksheet ss:Name="파트너십 현황">
-<Table>${colDefs}${headerRow}${dataRows}</Table>
-</Worksheet>
-</Workbook>`;
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(','))
+      .join('\n');
 
     const BOM = '\uFEFF';
-    const blob = new Blob([BOM + xml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     const d    = new Date().toISOString().slice(0,10).replace(/-/g,'');
     a.href = url;
-    a.download = `바이겔_파트너십_${d}.xls`;
+    a.download = `바이겔_파트너십_${d}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
-
   // ── 토스트 ──
   function showToast(msg) {
     const t = document.getElementById('sToast');
