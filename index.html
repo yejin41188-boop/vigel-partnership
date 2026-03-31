@@ -740,14 +740,48 @@
   let curIdx = null;
   let isDetail = false;
 
-  function initStaff() {
-    const s = localStorage.getItem('baigel_hosps');
-    if (s) hosps = JSON.parse(s);
-    buildProgGrid();
-    renderList();
+  // ── IndexedDB 설정 ──
+  const DB_NAME = 'baigel_db';
+  const DB_STORE = 'hosps';
+  let db;
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = e => {
+        e.target.result.createObjectStore(DB_STORE);
+      };
+      req.onsuccess = e => { db = e.target.result; resolve(db); };
+      req.onerror   = e => reject(e);
+    });
   }
 
-  function persist() { localStorage.setItem('baigel_hosps', JSON.stringify(hosps)); }
+  function idbGet() {
+    return new Promise((resolve) => {
+      const tx = db.transaction(DB_STORE, 'readonly');
+      const req = tx.objectStore(DB_STORE).get('data');
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror   = () => resolve([]);
+    });
+  }
+
+  function idbSet(data) {
+    return new Promise((resolve) => {
+      const tx = db.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).put(data, 'data');
+      tx.oncomplete = resolve;
+    });
+  }
+
+  function initStaff() {
+    openDB().then(() => idbGet()).then(data => {
+      hosps = data;
+      buildProgGrid();
+      renderList();
+    });
+  }
+
+  function persist() { idbSet(hosps); }
 
   // ── 비밀번호 ──
   document.getElementById('hiddenTrigger').addEventListener('click', () => {
