@@ -177,9 +177,15 @@
   .brand-name-kr { font-weight: 500; color: var(--primary-dark); font-size: 9pt; margin-bottom: 2px; }
 
   /* ===== 직원탭 스타일 ===== */
-  .hidden-trigger {
+  .app-version {
     display: inline-block;
-    cursor: pointer;
+    margin-left: 5px;
+    font-size: 8px;
+    color: rgba(30,46,79,0.4);
+    vertical-align: middle;
+    position: relative; top: -1px;
+  }
+  .hidden-trigger {
     background: rgba(30,46,79,0.07);
     border: 1px solid rgba(30,46,79,0.15);
     border-radius: 5px;
@@ -632,7 +638,7 @@
   <div class="watermark">Designed by elim</div>
   <div class="brand-group">
     <p class="brand-name-kr">초당약품공업(주)</p>
-    <p class="brand-name-en">CHODANG PHARMACEUTICAL CO., LTD.<span class="hidden-trigger" id="hiddenTrigger">STAFF</span></p>
+    <p class="brand-name-en">CHODANG PHARMACEUTICAL CO., LTD.<span class="hidden-trigger" id="hiddenTrigger">STAFF</span><span class="app-version">v3</span></p>
   </div>
 </footer>
 
@@ -728,7 +734,7 @@
 <div class="s-toast" id="sToast"></div>
 <div class="s-update-toast" id="sUpdateToast">
   <span>새 버전이 있습니다. 업데이트 시 데이터가 자동 백업됩니다.</span>
-  <button onclick="doUpdate()">새로고침</button>
+  <button onclick="doUpdate()">업데이트</button>
 </div>
 
 <script>
@@ -756,12 +762,11 @@
   }
 
   function doUpdate() {
-    // 전체 선택 후 다운로드
     hosps.forEach(h => h.selected = true);
     persist();
     downloadExcel();
-    // 다운로드 후 1.5초 뒤 새로고침
     setTimeout(() => {
+      localStorage.setItem('updated', '1');
       navigator.serviceWorker.getRegistration().then(reg => {
         if (reg && reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
       });
@@ -1058,6 +1063,12 @@
     const t = document.getElementById('sToast');
     t.textContent = msg; t.classList.add('show');
     setTimeout(()=>t.classList.remove('show'), 2000);
+  }
+
+  // 업데이트 완료 토스트
+  if (localStorage.getItem('updated') === '1') {
+    localStorage.removeItem('updated');
+    setTimeout(() => showToast('업데이트 완료됩니다 ✓'), 500);
   }
 
   initStaff();

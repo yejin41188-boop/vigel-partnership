@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vigel-v3';
+const CACHE_NAME = 'vigel-v4';
 const ASSETS = [
   './',
   './index.html',
