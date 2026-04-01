@@ -640,7 +640,7 @@
   <div class="watermark">Designed by elim</div>
   <div class="brand-group">
     <p class="brand-name-kr">초당약품공업(주)</p>
-    <p class="brand-name-en">CHODANG PHARMACEUTICAL CO., LTD.<span class="hidden-trigger" id="hiddenTrigger">STAFF</span><span class="app-version">v9</span></p>
+    <p class="brand-name-en">CHODANG PHARMACEUTICAL CO., LTD.<span class="hidden-trigger" id="hiddenTrigger">STAFF</span><span class="app-version">v10</span></p>
   </div>
 </footer>
 
@@ -774,20 +774,21 @@
 
     // IndexedDB에서 직접 데이터 읽어서 확인
     openDB().then(() => idbGet()).then(data => {
-      if (!data || !data.length) {
-        // 데이터 없으면 바로 업데이트
-        performUpdate();
-        return;
-      }
-      // 데이터 있으면 백업 완료 후 업데이트
-      hosps = data;
-      hosps.forEach(h => h.selected = true);
-      downloadExcel()
-        .then(performUpdate)
-        .catch(() => showToast('백업 실패. 다시 시도해주세요.'));
+      showToast(`데이터 ${data ? data.length : 0}개 확인`);
+      setTimeout(() => {
+        if (!data || !data.length) {
+          performUpdate();
+          return;
+        }
+        hosps = data;
+        hosps.forEach(h => h.selected = true);
+        downloadExcel()
+          .then(performUpdate)
+          .catch(() => showToast('백업 실패. 다시 시도해주세요.'));
+      }, 1500);
     }).catch(() => {
-      // DB 오류 시 바로 업데이트
-      performUpdate();
+      showToast('DB 읽기 실패');
+      setTimeout(performUpdate, 1500);
     });
   }
 
