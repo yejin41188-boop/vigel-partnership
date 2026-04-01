@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>바이겔크림 파트너십</title>
 <link rel="manifest" href="./manifest.json">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <meta name="theme-color" content="#1e2e4f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -423,6 +424,22 @@
     box-shadow: 0 8px 24px rgba(0,0,0,0.2);
   }
   .s-toast.show { opacity:1; }
+  .s-update-toast {
+    display: none;
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: var(--primary-dark); color: var(--accent-light);
+    padding: 11px 18px; border-radius: 24px;
+    font-size: 12.5px; font-weight: 600; z-index: 3001;
+    border: 1px solid rgba(200,164,90,0.5);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    align-items: center; gap: 12px; white-space: nowrap;
+  }
+  .s-update-toast button {
+    background: var(--accent-light); color: var(--primary-dark);
+    border: none; border-radius: 12px;
+    padding: 5px 12px; font-size: 12px; font-weight: 700;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -709,11 +726,37 @@
 </div>
 
 <div class="s-toast" id="sToast"></div>
+<div class="s-update-toast" id="sUpdateToast">
+  <span>새 버전이 있습니다. 저장하기 버튼 누른 후 업데이트하세요.</span>
+  <button onclick="doUpdate()">새로고침</button>
+</div>
 
 <script>
   // ── 서비스워커 등록 ──
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js');
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+      .then(reg => {
+        reg.addEventListener('updatefound', () => {
+          const newSW = reg.installing;
+          newSW.addEventListener('statechange', () => {
+            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+              showUpdateToast();
+            }
+          });
+        });
+      });
+  }
+
+  function showUpdateToast() {
+    const t = document.getElementById('sUpdateToast');
+    t.style.display = 'flex';
+  }
+
+  function doUpdate() {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg && reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    });
+    window.location.reload();
   }
 
   // ── 기존 toggleCard 유지 ──
@@ -946,7 +989,37 @@
     setTimeout(() => showList(), 600);
   }
 
-  // ── CSV 다운로드 ──
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // ── 엑셀 다운로드 ──
   function downloadExcel() {
     const sel = hosps.filter(h => h.selected);
     if (!sel.length) return;
@@ -962,20 +1035,14 @@
       h.etc  || '',
     ]);
 
-    const csvContent = [headers, ...rows]
-      .map(row => row.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(','))
-      .join('\n');
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '바이겔파트너십');
 
-    const BOM = '\uFEFF';
-    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    const d    = new Date().toISOString().slice(0,10).replace(/-/g,'');
-    a.href = url;
-    a.download = `바이겔_파트너십_${d}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const d = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    XLSX.writeFile(wb, `바이겔_파트너십_${d}.xlsx`);
   }
+
   // ── 토스트 ──
   function showToast(msg) {
     const t = document.getElementById('sToast');

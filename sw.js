@@ -1,7 +1,8 @@
-const CACHE_NAME = 'baigel-v1';
+const CACHE_NAME = 'vigel-v2';
 const ASSETS = [
   './',
-  './index.html'
+  './index.html',
+  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
 ];
 
 self.addEventListener('install', e => {
@@ -22,6 +23,10 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    caches.match(e.request).then(cached => cached || fetch(e.request, { mode: 'cors' }))
   );
+});
+
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
