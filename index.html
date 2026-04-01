@@ -727,7 +727,7 @@
 
 <div class="s-toast" id="sToast"></div>
 <div class="s-update-toast" id="sUpdateToast">
-  <span>새 버전이 있습니다. 저장하기 버튼 누른 후 업데이트하세요.</span>
+  <span>새 버전이 있습니다. 업데이트 시 데이터가 자동 백업됩니다.</span>
   <button onclick="doUpdate()">새로고침</button>
 </div>
 
@@ -736,6 +736,9 @@
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
       .then(reg => {
+        // 앱 열 때 이미 대기 중인 SW 있으면 토스트 표시
+        if (reg.waiting) showUpdateToast();
+
         reg.addEventListener('updatefound', () => {
           const newSW = reg.installing;
           newSW.addEventListener('statechange', () => {
@@ -753,10 +756,17 @@
   }
 
   function doUpdate() {
-    navigator.serviceWorker.getRegistration().then(reg => {
-      if (reg && reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-    });
-    window.location.reload();
+    // 전체 선택 후 다운로드
+    hosps.forEach(h => h.selected = true);
+    persist();
+    downloadExcel();
+    // 다운로드 후 1.5초 뒤 새로고침
+    setTimeout(() => {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (reg && reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      });
+      window.location.reload();
+    }, 3000);
   }
 
   // ── 기존 toggleCard 유지 ──
